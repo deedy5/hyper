@@ -16,7 +16,9 @@ jobs:
       - style
       - test
       - msrv
+      - miri
       - features
+      - deprecated
       - ffi
       - ffi-header
       - doc
@@ -28,21 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: rustfmt
 
       - name: cargo fmt --check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: |
+          if ! rustfmt --check --edition 2018 $(git ls-files '*.rs'); then
+            printf "Please run \`rustfmt --edition 2018 \$(git ls-files '*.rs')\` to fix rustfmt errors.\nSee CONTRIBUTING.md for more details.\n" >&2
+            exit 1
+          fi
 
   test:
     name: Test ${{ matrix.rust }} on ${{ matrix.os }}
@@ -61,38 +61,32 @@ jobs:
 
         include:
           - rust: stable
-            features: "--features full"
+            features: "--features full,backports,deprecated"
           - rust: beta
-            features: "--features full"
+            features: "--features full,backports"
           - rust: nightly
-            features: "--features full,nightly"
+            features: "--features full,nightly,backports"
             benches: true
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust (${{ matrix.rust }})
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: ${{ matrix.features }}
+        run: cargo test ${{ matrix.features }}
 
       - name: Test all benches
         if: matrix.benches
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --benches ${{ matrix.features }}
+        run: cargo test --benches ${{ matrix.features }}
 
   msrv:
     name: Check MSRV (${{ matrix.rust }})
@@ -100,7 +94,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.49 # keep in sync with MSRV.md dev doc
+          - 1.63 # keep in sync with MSRV.md dev doc
 
         os:
           - ubuntu-latest
@@ -109,20 +103,41 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust (${{ matrix.rust }})
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Pin some dependencies
+        run: |
+          cargo update -p tokio --precise 1.38.1
+          cargo update -p tokio-util --precise 0.7.11
+          cargo update -p hashbrown --precise 0.15.0
 
       - name: Check
-        uses: actions-rs/cargo@v1
+        run: cargo check --features full
+
+  miri:
+    name: Test with Miri
+    needs: [style]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          command: check
-          args: --features full
+          components: miri
+
+      - name: Test
+        # Can't enable tcp feature since Miri does not support the tokio runtime
+        run: MIRIFLAGS="-Zmiri-disable-isolation" cargo miri test --features http1,http2,client,server,stream,nightly
 
   features:
     name: features
@@ -130,20 +145,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-hack
-        run: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: check --feature-powerset
-        run: cargo hack check --feature-powerset --depth 2 --skip ffi -Z avoid-dev-deps
+        run: cargo hack --no-dev-deps check --feature-powerset --depth 2 --skip ffi
+
+  deprecated:
+    name: Check deprecated on ${{ matrix.rust }}
+    needs: [style]
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (${{ matrix.rust }})
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check
+        run: cargo check --features full,backports,deprecated
 
   ffi:
     name: Test C API (FFI)
@@ -151,69 +189,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install cbindgen
-        uses: actions-rs/cargo@v1
+        uses: taiki-e/cache-cargo-install-action@v1
         with:
-          command: install
-          args: cbindgen
+          tool: cbindgen
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Build FFI
-        uses: actions-rs/cargo@v1
+        run: cargo rustc --features client,http1,http2,ffi --crate-type cdylib
         env:
           RUSTFLAGS: --cfg hyper_unstable_ffi
-        with:
-          command: rustc
-          args: --features client,http1,http2,ffi -Z unstable-options --crate-type cdylib
 
       - name: Make Examples
         run: cd capi/examples && make client
 
       - name: Run FFI unit tests
-        uses: actions-rs/cargo@v1
+        run: cargo test --features full,ffi --lib
         env:
           RUSTFLAGS: --cfg hyper_unstable_ffi
-        with:
-          command: test
-          args: --features full,ffi --lib
 
   ffi-header:
     name: Verify hyper.h is up to date
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          default: true
-          override: true
-          components: cargo
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install cbindgen
-        uses: actions-rs/cargo@v1
+        uses: taiki-e/cache-cargo-install-action@v1
         with:
-          command: install
-          args: cbindgen
+          tool: cbindgen
+
+      - name: Install cargo-expand
+        uses: taiki-e/cache-cargo-install-action@v1
+        with:
+          tool: cargo-expand
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Build FFI
-        uses: actions-rs/cargo@v1
+        run: cargo build --features client,http1,http2,ffi
         env:
           RUSTFLAGS: --cfg hyper_unstable_ffi
-        with:
-          command: build
-          args: --features client,http1,http2,ffi
 
       - name: Ensure that hyper.h is up to date
         run: ./capi/gen_header.sh --verify
@@ -224,17 +250,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
+        uses: dtolnay/rust-toolchain@nightly
 
       - name: cargo doc
-        uses: actions-rs/cargo@v1
-        with:
-          command: rustdoc
-          args: --features full,ffi -- --cfg docsrs --cfg hyper_unstable_ffi -D broken-intra-doc-links
+        run: cargo rustdoc --features full,ffi -- --cfg docsrs --cfg hyper_unstable_ffi -D broken-intra-doc-links

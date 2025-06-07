@@ -1,3 +1,184 @@
+### v0.14.32 (2024-12-16)
+
+#### Features
+
+* **server:** add `Builder::max_pending_accept_reset_streams(num)` option ([a24f0c0](https://github.com/hyperium/hyper/commit/a24f0c0af8e1f4c6b7cc3a47c83eb6e4af88aca6))
+
+#### Bug Fixes
+
+* **http1:** fix intermittent panic parsing partial headers ([0f274ae](https://github.com/hyperium/hyper/commit/0f274ae653841e0a58b2835fd3edf47a08311e50))
+
+### v0.14.31 (2024-10-15)
+
+
+#### Bug Fixes
+
+* **http1:** improve performance of parsing sequentially partial messages ([97b595e](https://github.com/hyperium/hyper/commit/97b595e5892c239a195b199f9e7910f582351c44))
+
+
+### v0.14.30 (2024-07-09)
+
+
+#### Bug Fixes
+
+* **http1:** reject final chunked if missing 0 ([4a51b2af](https://github.com/hyperium/hyper/commit/4a51b2afefcc1373c2a5b834fa0ae8d935dbff46))
+
+
+### v0.14.29 (2024-06-03)
+
+
+#### Bug Fixes
+
+* **http1:** start header read timeout immediately (#3305) ([b5c2592f](https://github.com/hyperium/hyper/commit/b5c2592fde5e20d29c69428c85aef3d682ee36bc))
+
+
+#### Features
+
+* **http2:** add config for `max_local_error_reset_streams` in server (#3528) ([dedcb674](https://github.com/hyperium/hyper/commit/dedcb674f35eaec765a42b550caabe6f694d86d1))
+
+
+### v0.14.28 (2023-12-18)
+
+
+#### Bug Fixes
+
+* **client:**
+  * panic when pool idle timeout set to zero (#3365) ([34d38008](https://github.com/hyperium/hyper/commit/34d38008499de37d9b5b65440b3123ccd05c7510))
+  * divide by zero error when DNS returns no addrs (#3355) ([41eaf204](https://github.com/hyperium/hyper/commit/41eaf2042b8169d3dd067d49cfdbdaaf36678903))
+  * Do not strip `path` and `scheme` components from URIs for HTTP/2 Extended CONNEC ([45aa6249](https://github.com/hyperium/hyper/commit/45aa62494127066c63c987a57cc5eae2c5361886))
+  * early respond from server shouldn't propagate reset error (#3274) ([aac6760e](https://github.com/hyperium/hyper/commit/aac6760e032050dd47f5dbd32f852bf1ede9312b), closes [#2872](https://github.com/hyperium/hyper/issues/2872))
+* **http1:**
+  * add internal limit for chunked extensions (#3495) ([344a8782](https://github.com/hyperium/hyper/commit/344a87822951a46d252843ccc0b48e62988fc85b))
+  * reject chunked headers missing a digit (#3494) ([5eca028f](https://github.com/hyperium/hyper/commit/5eca028f4142e3e73f6d6188a4076f4db292b252))
+
+
+#### Features
+
+* **body:** deprecate to_bytes() and aggregate() (#3466) ([7f382ad6](https://github.com/hyperium/hyper/commit/7f382ad64326e1470912feb310d348fd79099c44))
+* **client:** add `conn::http1::Connection::without_shutdown()` method (#3431) ([ad504977](https://github.com/hyperium/hyper/commit/ad504977b520a9582e5516a08b2f1028ef1b5e45))
+* **server:** add `Builder::local_addr()` (#3278) ([d342c2c7](https://github.com/hyperium/hyper/commit/d342c2c714498d33891fa285a3c9ae991dc34769))
+
+
+### v0.14.27 (2023-06-26)
+
+
+#### Bug Fixes
+
+* **http1:**
+  * send error on Incoming body when connection errors (#3256) ([b107655f](https://github.com/hyperium/hyper/commit/b107655ff8557d001bb8e558752f5f2247381e98), closes [#3253](https://github.com/hyperium/hyper/issues/3253))
+  * properly end chunked bodies when it was known to be empty (#3254) ([32422c47](https://github.com/hyperium/hyper/commit/32422c47ec35e7405873277c87de14c18dbb98bd), closes [#3252](https://github.com/hyperium/hyper/issues/3252))
+
+
+#### Features
+
+* **client:** include connection info in `Client::send_request` errors (#2749)
+
+
+### v0.14.26 (2023-04-13)
+
+
+#### Features
+
+* **http2:** add `max_pending_accept_reset_streams` configuration option (#3201) ([a6f7571a](https://github.com/hyperium/hyper/commit/a6f7571a5299793aef8f1aa4194574438b9df64c))
+
+
+### v0.14.25 (2023-03-10)
+
+
+#### Features
+
+* **client:**
+  * deprecate `client::conn` types (#3156) ([0ced15d3](https://github.com/hyperium/hyper/commit/0ced15d3cc10ace477ebda13ead8e6857b51867e))
+  * add 1.0 compatible client conn API  (#3155) ([253cc74d](https://github.com/hyperium/hyper/commit/253cc74d86b082067aa884a0a63a089d7d19401d), closes [#3053](https://github.com/hyperium/hyper/issues/3053))
+  * add `client::connect::capture_connection()` (#3144) ([c8493399](https://github.com/hyperium/hyper/commit/c8493399b2929a86f3020ae77304a00e43cfd161))
+  * add `poison` to `Connected` (#3145) ([37ed5a2e](https://github.com/hyperium/hyper/commit/37ed5a2e3cab76a11092823a80afd8fe2f2a9693))
+* **server:**
+  * deprecate server conn structs (#3161) ([02fe20f2](https://github.com/hyperium/hyper/commit/02fe20f232a7c3cf24d505b121ce4d428a93254d))
+  * backport the split server conn modules from 1.0 (#3102) ([84881c9e](https://github.com/hyperium/hyper/commit/84881c9e5160167a89d18d30c0ef6856dc859839), closes [#3079](https://github.com/hyperium/hyper/issues/3079))
+  * remove some `Unpin` and `'static` constraints (#3119) ([0368a41a](https://github.com/hyperium/hyper/commit/0368a41a6cc1a5c6f1eada0d88e38b7dce261587))
+
+
+### v0.14.24 (2023-02-02)
+
+
+#### Bug Fixes
+
+* **body:** set an internal max to reserve in `to_bytes` ([4d89adce](https://github.com/hyperium/hyper/commit/4d89adce6122af1650165337d9d814314e7ee409))
+* **server:** prevent sending 100-continue if user drops request body (#3138) ([92443d7e](https://github.com/hyperium/hyper/commit/92443d7ef57ed474f0add7dd1f114c81a3faa8fe))
+
+
+#### Features
+
+* **http2:** add `http2_max_header_list_size` to `hyper::server::Builder` (#3006) ([031425f0](https://github.com/hyperium/hyper/commit/031425f087219f02a87eea3d01b14e75e35a5209))
+
+
+### v0.14.23 (2022-11-07)
+
+
+#### Bug Fixes
+
+* **http2:** Fix race condition in client dispatcher (#3041) ([2f1c0b72](https://github.com/hyperium/hyper/commit/2f1c0b720da4553fff216a38018a78ecafe23d60), closes [#2419](https://github.com/hyperium/hyper/issues/2419))
+
+
+### v0.14.22 (2022-10-31)
+
+
+#### Bug Fixes
+
+* **server:** fix compile-time cfgs for TCP keepalive options (#3039) ([e8765e0f](https://github.com/hyperium/hyper/commit/e8765e0febd0267472799dcd1109af75944c2637), closes [#3038](https://github.com/hyperium/hyper/issues/3038))
+
+
+### v0.14.21 (2022-10-31)
+
+
+#### Bug Fixes
+
+* **client:** send an error back to client when dispatch misbehaves () ([9fa36382](https://github.com/hyperium/hyper/commit/9fa363829ced232acb18c31ebab8ffb93f691ecc), closes [#2649](https://github.com/hyperium/hyper/issues/2649))
+* **http1:** fix `http1_header_read_timeout` to use same future (#2891) ([c5a14e7c](https://github.com/hyperium/hyper/commit/c5a14e7c087424001223aaeb2dad532ba4ee6063))
+
+
+#### Features
+
+* **http1:** allow ignoring invalid header lines in requests ([73dd4746](https://github.com/hyperium/hyper/commit/73dd474652f5e71fe8a87baa6f9b2490ae746eb3))
+* **server:** add `Server::tcp_keepalive_interval` and `Server::tcp_keepalive_retries` (#2991) ([287d7124](https://github.com/hyperium/hyper/commit/287d712483aec6671427438d60ed2a72f856fd9f))
+
+
+### v0.14.20 (2022-07-07)
+
+
+#### Bug Fixes
+
+* **http1:** fix `http1_header_read_timeout` to use same future (#2891) ([c5a14e7c](https://github.com/hyperium/hyper/commit/c5a14e7c087424001223aaeb2dad532ba4ee6063))
+
+
+#### Features
+
+* **ext:** support non-canonical HTTP/1 reason phrases (#2792) ([b2052a43](https://github.com/hyperium/hyper/commit/b2052a433fd151d7d745ee9c5b27a2031db1dc32))
+
+
+### v0.14.19 (2022-05-27)
+
+
+#### Bug Fixes
+
+* **http1:** fix preserving header case without enabling ffi (#2820) ([6a35c175](https://github.com/hyperium/hyper/commit/6a35c175f2b416851518b5831c2c7827d6dbd822))
+* **server:** don't add implicit content-length to HEAD responses (#2836) ([67b73138](https://github.com/hyperium/hyper/commit/67b73138f110979f3c77ef7b56588f018837e592))
+
+
+#### Features
+
+* **server:**
+  * add `Connection::http2_max_header_list_size` option (#2828) ([a32658c1](https://github.com/hyperium/hyper/commit/a32658c1ae7f1261fa234a767df963be4fc63521), closes [#2826](https://github.com/hyperium/hyper/issues/2826))
+  * add `AddrStream::local_addr()` (#2816) ([ffbf610b](https://github.com/hyperium/hyper/commit/ffbf610b1631cabfacb20886270e3c137fa93800), closes [#2773](https://github.com/hyperium/hyper/issues/2773))
+
+
+#### Breaking Changes
+
+* **ffi (unstable):**
+  * `hyper_clientconn_options_new` no longer sets the `http1_preserve_header_case` connection option by default.
+    Users should now call `hyper_clientconn_options_set_preserve_header_case` if they desire that functionality. ([78de8914](https://github.com/hyperium/hyper/commit/78de8914eadeab4b9a2c71a82c77b2ce33fe6c74))
+
+
 ### v0.14.18 (2022-03-22)
 
 
