@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1748285814035,
-  "repoUrl": "https://github.com/hyperium/hyper",
+  "lastUpdate": 1768071916439,
+  "repoUrl": "https://github.com/deedy5/hyper",
   "entries": {
     "pipeline": [
       {
@@ -9899,6 +9899,36 @@ window.BENCHMARK_DATA = {
             "name": "hello_world_16",
             "value": 43994,
             "range": "± 8294.54",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "poe.liu@pm.me",
+            "name": "Dongpo Liu",
+            "username": "0xPoe"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bcb8ec576619650d3388604e6c246829e7be133a",
+          "message": "fix(http1): use httparse config for Servers (#4002)\n\nPreviously, you could config the httparse config on the server `Builder`, just like you can for clients, but unlike clients, hyper forgot to _use_ that config when parsing requests.\n\nThis fixes the mistake.\n\nCloses #3923",
+          "timestamp": "2026-01-05T09:12:59-05:00",
+          "tree_id": "c212d6aa89cb6c0b51c423195db7eae6dcde9316",
+          "url": "https://github.com/deedy5/hyper/commit/bcb8ec576619650d3388604e6c246829e7be133a"
+        },
+        "date": 1768071914099,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "hello_world_16",
+            "value": 48808,
+            "range": "± 10834.07",
             "unit": "ns/iter"
           }
         ]
